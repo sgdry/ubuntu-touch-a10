@@ -57,8 +57,26 @@ jobs:
           sed -i '/sepolicy\.mk/d' device/samsung/a10/BoardConfig.mk
           find vendor/samsung/a10 -name "Android.bp" -exec grep -l "android_app_import\|android_app_certificate" {} \; | xargs rm -f
 
-          # Wipe the whole file - it's all LineageOS-specific Soong rules Halium doesn't need
-          echo "" > vendor/lineage/build/soong/Android.bp
+          # Remove only the generated_kernel_includes block, keep everything else (e.g. soong-lineage)
+          python3 - << 'PYEOF'
+          c = open('vendor/lineage/build/soong/Android.bp').read()
+          out, i, n = [], 0, len(c)
+          while i < n:
+              b = c.find('{', i)
+              if b < 0:
+                  out.append(c[i:])
+                  break
+              d, j = 1, b + 1
+              while j < n and d > 0:
+                  if c[j] == '{': d += 1
+                  elif c[j] == '}': d -= 1
+                  j += 1
+              blk = c[i:j]
+              if 'generated_kernel_includes' not in blk:
+                  out.append(blk)
+              i = j
+          open('vendor/lineage/build/soong/Android.bp', 'w').write(''.join(out))
+          PYEOF
 
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
