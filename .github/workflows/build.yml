@@ -5,9 +5,17 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-    
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:20.04
+
     steps:
+    - name: Prepare Container Environment
+      # The base container needs these before anything else will work
+      run: |
+        apt-get update
+        apt-get install -y sudo curl git python2
+
     - name: Maximize Build Space
       run: |
         sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
@@ -16,7 +24,7 @@ jobs:
     - name: Install Build Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y git gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python2
+        sudo apt-get install -y gnupg flex bison build-essential zip zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
     - name: Install Repo Tool
       run: |
@@ -28,6 +36,7 @@ jobs:
       run: |
         git config --global user.name "Your Name"
         git config --global user.email "youremail@example.com"
+        export PATH=$PATH:~/bin
         ~/bin/repo init -u https://github.com/Halium/android.git -b halium-9.0 --depth=1
         ~/bin/repo sync -c -j8 --force-sync --no-clone-bundle --no-tags
 
@@ -39,10 +48,8 @@ jobs:
 
     - name: Build Halium for A10
       run: |
-        source build/envsetup.sh
-        lunch halium_a10-userdebug
-        mka halium-boot
-        mka systemimage
+        export PATH=$PATH:~/bin
+        /bin/bash -c "source build/envsetup.sh && lunch halium_a10-userdebug && mka halium-boot && mka systemimage"
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v4
