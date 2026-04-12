@@ -36,10 +36,14 @@ jobs:
 
       - name: Clone Galaxy A10 Trees
         run: |
+          # Device Tree
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
+          
+          # Vendor Tree
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
-          # Updated kernel repo and branch for 2026
-          git clone https://github.com/eurekadevelopment/Eureka-Kernel.git -b Eureka-Q kernel/samsung/a10
+          
+          # Matched Kernel Tree (Updated for stability)
+          git clone https://github.com/geckyn/android_kernel_samsung_exynos7885.git -b lineage-17.1 kernel/samsung/a10
 
       - name: Build Halium Images
         run: |
