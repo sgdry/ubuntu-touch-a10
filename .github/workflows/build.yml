@@ -42,6 +42,7 @@ jobs:
         run: |
           cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
+
           mkdir -p vendor/samsung/a10
           REAL_VENDOR_MK=$(find vendor/samsung/a10 -maxdepth 1 -name "*.mk" | grep "vendor" | head -n 1)
           if [ -n "$REAL_VENDOR_MK" ]; then
@@ -51,10 +52,14 @@ jobs:
             echo "No vendor file found, creating a placeholder to stop the error."
             touch vendor/samsung/a10/a10-vendor.mk
           fi
+
           sed -i '/vendor\/lineage/d' device/samsung/a10/halium_a10.mk
           sed -i '/sepolicy\.mk/d' device/samsung/a10/BoardConfig.mk
           find vendor/samsung/a10 -name "Android.bp" -exec grep -l "android_app_import\|android_app_certificate" {} \; | xargs rm -f
-          sed -i '/generated_kernel_includes/,/^}/d' vendor/lineage/build/soong/Android.bp
+
+          # Wipe the whole file - it's all LineageOS-specific Soong rules Halium doesn't need
+          echo "" > vendor/lineage/build/soong/Android.bp
+
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
       - name: Build Halium Images
