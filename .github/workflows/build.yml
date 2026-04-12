@@ -39,8 +39,8 @@ jobs:
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
           git clone https://github.com/geckyn/android_kernel_samsung_exynos7885.git -b lineage-17.1 kernel/samsung/a10
-          - name: Halium-ize Device Tree
-            run: |
+        - name: Halium-ize Device Tree
+          run: |
           cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
 
