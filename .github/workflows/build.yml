@@ -38,7 +38,8 @@ jobs:
         run: |
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
-          git clone https://github.com/Chatur27/Eureka-kernel-for-SM-A105-Q.git -b Eureka-QQ kernel/samsung/a10
+          # Updated kernel repo and branch for 2026
+          git clone https://github.com/eurekadevelopment/Eureka-Kernel.git -b Eureka-Q kernel/samsung/a10
 
       - name: Build Halium Images
         run: |
