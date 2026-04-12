@@ -1,0 +1,53 @@
+name: Build Ubuntu Touch (Halium 9.0) for Galaxy A10
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    
+    steps:
+    - name: Maximize Build Space
+      run: |
+        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        sudo apt-get clean
+
+    - name: Install Build Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python2
+
+    - name: Install Repo Tool
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+
+    - name: Sync Halium 9.0 Source
+      run: |
+        git config --global user.name "Your Name"
+        git config --global user.email "youremail@example.com"
+        ~/bin/repo init -u https://github.com/Halium/android.git -b halium-9.0 --depth=1
+        ~/bin/repo sync -c -j8 --force-sync --no-clone-bundle --no-tags
+
+    - name: Clone Galaxy A10 Device Trees, Vendor & Kernel
+      run: |
+        git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
+        git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
+        git clone https://github.com/Chatur27/Eureka-kernel-for-SM-A105-Q.git -b Eureka-QQ kernel/samsung/a10
+
+    - name: Build Halium for A10
+      run: |
+        source build/envsetup.sh
+        lunch halium_a10-userdebug
+        mka halium-boot
+        mka systemimage
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ubuntu-touch-a10-images
+        path: |
+          out/target/product/a10/halium-boot.img
+          out/target/product/a10/system.img
