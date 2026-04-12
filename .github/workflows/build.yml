@@ -39,8 +39,8 @@ jobs:
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
           git clone https://github.com/geckyn/android_kernel_samsung_exynos7885.git -b lineage-17.1 kernel/samsung/a10
-      -  name: Halium-ize Device Tree
-         run: |
+      - name: Halium-ize Device Tree
+        run: |
           cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
 
@@ -55,9 +55,10 @@ jobs:
           fi
 
           sed -i '/vendor\/lineage/d' device/samsung/a10/halium_a10.mk
-
-          # Strip ALL external sepolicy includes that don't exist in the Halium tree
           sed -i '/sepolicy\.mk/d' device/samsung/a10/BoardConfig.mk
+
+          # Remove vendor Android.bp using Soong module types unsupported in Halium 9.0
+          find vendor/samsung/a10 -name "Android.bp" -exec grep -l "android_app_import\|android_app_certificate" {} \; | xargs rm -f
 
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
       - name: Build Halium Images
