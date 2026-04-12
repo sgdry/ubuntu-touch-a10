@@ -36,18 +36,26 @@ jobs:
 
       - name: Clone Galaxy A10 Trees
         run: |
-          # Device Tree
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
-          
-          # Vendor Tree
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
-          
-          # Matched Kernel Tree (Updated for stability)
           git clone https://github.com/geckyn/android_kernel_samsung_exynos7885.git -b lineage-17.1 kernel/samsung/a10
+
+      - name: Halium-ize Device Tree
+        run: |
+          # Create the halium_a10.mk file from the lineage version
+          cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
+          
+          # Rename the product inside the file
+          sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
+          
+          # Add halium_a10 to the AndroidProducts list
+          echo -e "\nPRODUCT_MAKEFILES += \$(LOCAL_DIR)/halium_a10.mk" >> device/samsung/a10/AndroidProducts.mk
 
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
+          # Force the build system to use Python 2 for compatibility
+          export PYTHON_BIN=python2 
           source build/envsetup.sh
           lunch halium_a10-userdebug
           mka halium-boot -j$(nproc)
