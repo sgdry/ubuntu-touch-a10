@@ -48,13 +48,17 @@ jobs:
           # Rename the product inside the file
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
           
+          # FIX: Find the actual vendor makefile and link it to the expected name
+          # This looks for any .mk file in the vendor folder that looks like a main vendor config
+          ACTUAL_VENDOR_MK=$(find vendor/samsung/a10 -name "*vendor*.mk" | head -n 1)
+          cp "$ACTUAL_VENDOR_MK" vendor/samsung/a10/a10-vendor.mk
+          
           # Add halium_a10 to the AndroidProducts list
           echo -e "\nPRODUCT_MAKEFILES += \$(LOCAL_DIR)/halium_a10.mk" >> device/samsung/a10/AndroidProducts.mk
 
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
-          # Force the build system to use Python 2 for compatibility
           export PYTHON_BIN=python2 
           source build/envsetup.sh
           lunch halium_a10-userdebug
