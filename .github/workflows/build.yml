@@ -1,60 +1,57 @@
-name: Build Ubuntu Touch (Halium 9.0) for Galaxy A10
+name: Build Ubuntu Touch A10
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    container:
-      image: ubuntu:20.04
-
+  build_job:
+    runs-on: ubuntu-22.04
     steps:
-    - name: Prepare Container Environment
-      # The base container needs these before anything else will work
-      run: |
-        apt-get update
-        apt-get install -y sudo curl git python2
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Maximize Build Space
-      run: |
-        sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        sudo apt-get clean
+      - name: Maximize Space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo apt-get clean
 
-    - name: Install Build Dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y gnupg flex bison build-essential zip zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+      - name: Install Dependencies
+        run: |
+          sudo DEBIAN_FRONTEND=noninteractive apt-get update
+          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y git gnupg flex bison build-essential zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig python2
 
-    - name: Install Repo Tool
-      run: |
-        mkdir -p ~/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-        chmod a+x ~/bin/repo
+      - name: Setup Repo Tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          git config --global user.name "Builder"
+          git config --global user.email "build@example.com"
 
-    - name: Sync Halium 9.0 Source
-      run: |
-        git config --global user.name "Your Name"
-        git config --global user.email "youremail@example.com"
-        export PATH=$PATH:~/bin
-        ~/bin/repo init -u https://github.com/Halium/android.git -b halium-9.0 --depth=1
-        ~/bin/repo sync -c -j8 --force-sync --no-clone-bundle --no-tags
+      - name: Sync Halium Source
+        run: |
+          export PATH=$PATH:~/bin
+          repo init -u https://github.com/Halium/android.git -b halium-9.0 --depth=1
+          repo sync -c -j8 --force-sync --no-clone-bundle --no-tags
 
-    - name: Clone Galaxy A10 Device Trees, Vendor & Kernel
-      run: |
-        git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
-        git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
-        git clone https://github.com/Chatur27/Eureka-kernel-for-SM-A105-Q.git -b Eureka-QQ kernel/samsung/a10
+      - name: Clone Galaxy A10 Trees
+        run: |
+          git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
+          git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
+          git clone https://github.com/Chatur27/Eureka-kernel-for-SM-A105-Q.git -b Eureka-QQ kernel/samsung/a10
 
-    - name: Build Halium for A10
-      run: |
-        export PATH=$PATH:~/bin
-        /bin/bash -c "source build/envsetup.sh && lunch halium_a10-userdebug && mka halium-boot && mka systemimage"
+      - name: Build Halium Images
+        run: |
+          export PATH=$PATH:~/bin
+          source build/envsetup.sh
+          lunch halium_a10-userdebug
+          mka halium-boot -j$(nproc)
+          mka systemimage -j$(nproc)
 
-    - name: Upload Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ubuntu-touch-a10-images
-        path: |
-          out/target/product/a10/halium-boot.img
-          out/target/product/a10/system.img
+      - name: Upload Finished Images
+        uses: actions/upload-artifact@v4
+        with:
+          name: A10-Ubuntu-Touch-Images
+          path: |
+            out/target/product/a10/halium-boot.img
+            out/target/product/a10/system.img
