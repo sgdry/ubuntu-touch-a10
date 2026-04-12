@@ -42,12 +42,9 @@ jobs:
 
       - name: Halium-ize Device Tree
         run: |
-          # 1. Create the halium_a10.mk file and rename the product internal references
           cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
-          
-          # 2. Fix the Vendor File Error
-          # This finds whatever the developer named the vendor .mk and links it to a10-vendor.mk
+
           mkdir -p vendor/samsung/a10
           REAL_VENDOR_MK=$(find vendor/samsung/a10 -maxdepth 1 -name "*.mk" | grep "vendor" | head -n 1)
           if [ -n "$REAL_VENDOR_MK" ]; then
@@ -57,13 +54,13 @@ jobs:
              echo "No vendor file found, creating a placeholder to stop the error."
              touch vendor/samsung/a10/a10-vendor.mk
           fi
-          
-          # 3. Clean up Lineage-specific inclusions that don't exist in Halium
-          sed -i '/vendor\/lineage/d' device/samsung/a10/halium_a10.mk
-          
-          # 4. Force-register the new product
-          echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
+          sed -i '/vendor\/lineage/d' device/samsung/a10/halium_a10.mk
+
+          # Remove LineageOS-specific sepolicy path that doesn't exist in Halium
+          sed -i '/device\/lineage\/sepolicy/d' device/samsung/a10/BoardConfig.mk
+
+          echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
