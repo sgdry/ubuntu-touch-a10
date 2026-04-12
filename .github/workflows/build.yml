@@ -1,8 +1,6 @@
 name: Build Ubuntu Touch A10
-
 on:
   workflow_dispatch:
-
 jobs:
   build_job:
     runs-on: ubuntu-22.04
@@ -39,33 +37,30 @@ jobs:
           git clone https://github.com/geckyn/android_device_samsung_a10.git -b lineage-17.1 device/samsung/a10
           git clone https://github.com/geckyn/proprietary_vendor_samsung_a10.git -b lineage-17.1 vendor/samsung/a10
           git clone https://github.com/geckyn/android_kernel_samsung_exynos7885.git -b lineage-17.1 kernel/samsung/a10
-        - name: Halium-ize Device Tree
-          run: |
+
+      - name: Halium-ize Device Tree
+        run: |
           cp device/samsung/a10/lineage_a10.mk device/samsung/a10/halium_a10.mk
           sed -i 's/lineage_a10/halium_a10/g' device/samsung/a10/halium_a10.mk
-
           mkdir -p vendor/samsung/a10
           REAL_VENDOR_MK=$(find vendor/samsung/a10 -maxdepth 1 -name "*.mk" | grep "vendor" | head -n 1)
           if [ -n "$REAL_VENDOR_MK" ]; then
-             echo "Found vendor config at $REAL_VENDOR_MK. Linking to expected path..."
-             cp "$REAL_VENDOR_MK" vendor/samsung/a10/a10-vendor.mk
+            echo "Found vendor config at $REAL_VENDOR_MK. Linking to expected path..."
+            cp "$REAL_VENDOR_MK" vendor/samsung/a10/a10-vendor.mk
           else
-             echo "No vendor file found, creating a placeholder to stop the error."
-             touch vendor/samsung/a10/a10-vendor.mk
+            echo "No vendor file found, creating a placeholder to stop the error."
+            touch vendor/samsung/a10/a10-vendor.mk
           fi
-
           sed -i '/vendor\/lineage/d' device/samsung/a10/halium_a10.mk
           sed -i '/sepolicy\.mk/d' device/samsung/a10/BoardConfig.mk
           find vendor/samsung/a10 -name "Android.bp" -exec grep -l "android_app_import\|android_app_certificate" {} \; | xargs rm -f
-
-          # Remove Soong module that uses unsupported make variable $(KERNEL_MAKE_FLAGS)
           sed -i '/generated_kernel_includes/,/^}/d' vendor/lineage/build/soong/Android.bp
-
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
+
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
-          export PYTHON_BIN=python2 
+          export PYTHON_BIN=python2
           source build/envsetup.sh
           lunch halium_a10-userdebug
           mka halium-boot -j$(nproc)
