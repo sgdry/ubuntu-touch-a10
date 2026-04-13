@@ -77,7 +77,8 @@ jobs:
           open('vendor/lineage/build/soong/Android.bp', 'w').write(''.join(out))
           PYEOF
 
-          echo 'filegroup { name: "generated_kernel_headers", srcs: [] }' >> vendor/lineage/build/soong/Android.bp
+          # Use cc_library_headers so arch variants are generated correctly
+          echo 'cc_library_headers { name: "generated_kernel_headers" }' >> vendor/lineage/build/soong/Android.bp
 
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
