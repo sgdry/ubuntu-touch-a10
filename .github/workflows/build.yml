@@ -57,7 +57,6 @@ jobs:
           sed -i '/sepolicy\.mk/d' device/samsung/a10/BoardConfig.mk
           find vendor/samsung/a10 -name "Android.bp" -exec grep -l "android_app_import\|android_app_certificate" {} \; | xargs rm -f
 
-          # Remove only the generated_kernel_includes block, keep everything else (e.g. soong-lineage)
           python3 - << 'PYEOF'
           c = open('vendor/lineage/build/soong/Android.bp').read()
           out, i, n = [], 0, len(c)
@@ -77,6 +76,8 @@ jobs:
               i = j
           open('vendor/lineage/build/soong/Android.bp', 'w').write(''.join(out))
           PYEOF
+
+          echo 'filegroup { name: "generated_kernel_headers", srcs: [] }' >> vendor/lineage/build/soong/Android.bp
 
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
