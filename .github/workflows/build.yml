@@ -90,16 +90,13 @@ jobs:
           cd kernel/samsung/a10
           export ARCH=arm64
           export CROSS_COMPILE=aarch64-linux-gnu-
-          # Fix GCC 10+ yylloc duplicate definition error
-          sed -i 's/YYLTYPE yylloc/extern YYLTYPE yylloc/' scripts/dtc/dtc-lexer.lex.c_shipped
           ls arch/arm64/configs/ | grep -i "a10\|exynos7885\|samsung"
-          make exynos7885-a10_defconfig || \
-          make a10_defconfig || \
-          make exynos7885_defconfig
-          make -j$(nproc)
+          make exynos7885-a10_defconfig HOSTCFLAGS="-fcommon" || \
+          make a10_defconfig HOSTCFLAGS="-fcommon" || \
+          make exynos7885_defconfig HOSTCFLAGS="-fcommon"
+          make -j$(nproc) HOSTCFLAGS="-fcommon"
           cd ../../..
           find kernel/samsung/a10/arch/arm64/boot -name "Image*" -o -name "zImage" | head -5
-
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
