@@ -85,6 +85,7 @@ jobs:
         run: |
           export PATH=$PATH:~/bin
           export PYTHON_BIN=python2
+          export ALLOW_MISSING_DEPENDENCIES=true
           mkdir -p tools/metalava/manual
           source build/envsetup.sh
           lunch halium_a10-userdebug
