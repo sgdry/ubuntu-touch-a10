@@ -81,15 +81,32 @@ jobs:
 
           echo 'PRODUCT_MAKEFILES := $(LOCAL_DIR)/halium_a10.mk' > device/samsung/a10/AndroidProducts.mk
 
+      - name: Install Cross Compiler
+        run: |
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Build Kernel Manually
+        run: |
+          cd kernel/samsung/a10
+          export ARCH=arm64
+          export CROSS_COMPILE=aarch64-linux-gnu-
+          ls arch/arm64/configs/ | grep -i "a10\|exynos7885\|samsung"
+          make exynos7885-a10_defconfig || \
+          make a10_defconfig || \
+          make exynos7885_defconfig
+          make -j$(nproc)
+          cd ../../..
+          find kernel/samsung/a10/arch/arm64/boot -name "Image*" -o -name "zImage" | head -5
+
       - name: Build Halium Images
         run: |
           export PATH=$PATH:~/bin
-          export PYTHON_BIN=python2
           export ALLOW_MISSING_DEPENDENCIES=true
-          mkdir -p tools/metalava/manual
+          KERNEL_IMAGE=$(find kernel/samsung/a10/arch/arm64/boot -name "Image.gz-dtb" -o -name "Image-dtb" -o -name "Image.gz" -o -name "Image" | head -n 1)
+          echo "Using kernel: $KERNEL_IMAGE"
+          echo "TARGET_PREBUILT_KERNEL := $KERNEL_IMAGE" >> device/samsung/a10/BoardConfig.mk
           source build/envsetup.sh
           lunch halium_a10-userdebug
-          mka kernel -j$(nproc)
           mka halium-boot -j$(nproc)
           mka systemimage -j$(nproc)
 
