@@ -89,6 +89,7 @@ jobs:
           mkdir -p tools/metalava/manual
           source build/envsetup.sh
           lunch halium_a10-userdebug
+          mka kernel -j$(nproc)
           mka halium-boot -j$(nproc)
           mka systemimage -j$(nproc)
 
