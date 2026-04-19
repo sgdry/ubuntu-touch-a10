@@ -94,7 +94,7 @@ jobs:
           make exynos7885-a10_defconfig HOSTCFLAGS="-fcommon" || \
           make a10_defconfig HOSTCFLAGS="-fcommon" || \
           make exynos7885_defconfig HOSTCFLAGS="-fcommon"
-          make -j$(nproc) HOSTCFLAGS="-fcommon"
+          make -j$(nproc) HOSTCFLAGS="-fcommon" KCFLAGS="-Wno-error=stringop-overread -Wno-error=stringop-overflow"
           cd ../../..
           find kernel/samsung/a10/arch/arm64/boot -name "Image*" -o -name "zImage" | head -5
       - name: Build Halium Images
